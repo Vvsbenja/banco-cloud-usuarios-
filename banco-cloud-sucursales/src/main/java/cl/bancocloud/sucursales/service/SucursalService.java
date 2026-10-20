@@ -2,6 +2,7 @@ package cl.bancocloud.sucursales.service;
 
 import cl.bancocloud.sucursales.entity.Sucursal;
 import cl.bancocloud.sucursales.repository.SucursalRepository;
+import cl.bancocloud.sucursales.messaging.SucursalEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,9 +11,11 @@ import java.util.List;
 public class SucursalService {
 
     private final SucursalRepository repository;
+    private final SucursalEventPublisher publisher;
 
-    public SucursalService(SucursalRepository repository) {
+    public SucursalService(SucursalRepository repository, SucursalEventPublisher publisher) {
         this.repository = repository;
+        this.publisher = publisher;
     }
 
     public List<Sucursal> obtenerTodas() {
@@ -35,7 +38,9 @@ public class SucursalService {
 
     public Sucursal crear(Sucursal sucursal) {
         sucursal.setActiva(true);
-        return repository.save(sucursal);
+        Sucursal guardada = repository.save(sucursal);
+        publisher.publicarCreacion(guardada.getId());
+        return guardada;
     }
 
     public Sucursal actualizar(Long id, Sucursal datos) {
